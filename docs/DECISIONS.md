@@ -9,3 +9,10 @@
 - Which geography will all three indicators share?
 - Which years will all three indicators share?
 - Commit raw data to git or not? (Leaning yes if files are small, for reproducibility.)
+
+## Update 2026-11-24
+- Decision: shared geography = UHF42. CD fails on asthma and poverty years; NTA has no PM2.5.
+- Decision: use "Neighborhood poverty" (percent), not "Child poverty (under age 5)".
+- Open: rule for matching 5-year poverty windows to single years.
+- Open: how to handle "*" flagged asthma values (3 rows in the age 5-17 UHF42 data).
+- Open: adults asthma 2015 missing at UHF42; check the portal.
