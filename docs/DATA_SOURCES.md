@@ -8,7 +8,7 @@ Raw files in data/raw are untouched.
 |---|---|---|---|---|---|
 | pm25.csv | Fine particles (PM 2.5) | NYC Community Air Survey | Annual mean (mcg/m3) | 2015-2025 | |
 | asthma_ed_5to17.csv | Asthma ED visits (age 5 to 17) | SPARCS hospital discharge data | Estimated annual rate per 10,000 | 2005-2023 | 3 values flagged with "*" |
-| asthma_ed_adults.csv | Asthma ED visits (adults) | SPARCS hospital discharge data | Estimated annual rate per 10,000 | 2005-2023 | 2015 missing in this file |
+| asthma_ed_adults.csv | Asthma ED visits (adults) | SPARCS hospital discharge data | Age-adjusted rate per 10,000 | 2005-2023 | 2015 missing in this file |
 | poverty.csv | Neighborhood poverty | American Community Survey | Percent | 2007-11 to 2019-23 | 5-year overlapping windows, not single years |
 
 ## Not used
