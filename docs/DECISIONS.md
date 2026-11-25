@@ -16,3 +16,12 @@
 - Open: rule for matching 5-year poverty windows to single years.
 - Open: how to handle "*" flagged asthma values (3 rows in the age 5-17 UHF42 data).
 - Open: adults asthma 2015 missing at UHF42; check the portal.
+
+## Update 2026-11-25
+
+### Poverty data matching
+Poverty estimates are drawn from overlapping five-year American Community Survey (ACS) periods rather than annual estimates. To align poverty data with each study year, we assign the five-year ACS estimate ending in that year. For example, 2017 is matched to the 2013–2017 ACS estimate. This approach provides coverage for every year from 2015 through 2023 without requiring extrapolation beyond the available data.
+
+Two limitations should be noted. First, because each estimate summarizes a five-year period, it reflects conditions preceding and including the matched year rather than conditions in that year alone. Second, consecutive annual estimates overlap substantially, sharing four of their five years of underlying data. Consequently, poverty estimates across neighboring years are not statistically independent.
+
+As a robustness check, we plan to repeat the analysis using a consistent 2019–2023 ACS five-year estimate across all study years to assess whether the findings are sensitive to the year-specific matching approach.
