@@ -4,12 +4,12 @@ All files downloaded on 2026-11-24 from the NYC Environment & Health Data Portal
 (https://a816-dohbesp.nyc.gov/IndicatorPublic/), via each indicator's Table tab > Download data.
 Raw files in data/raw are untouched.
 
-| File | Indicator | Source | Measure used | UHF42 years | Notes |
-|---|---|---|---|---|---|
-| pm25.csv | Fine particles (PM 2.5) | NYC Community Air Survey | Annual mean (mcg/m3) | 2015-2025 | |
-| asthma_ed_5to17.csv | Asthma ED visits (age 5 to 17) | SPARCS hospital discharge data | Estimated annual rate per 10,000 | 2005-2023 | 3 values flagged with "*" |
-| asthma_ed_adults.csv | Asthma ED visits (adults) | SPARCS hospital discharge data | Age-adjusted rate per 10,000 | 2005-2023 | 2015 missing in this file |
-| poverty.csv | Neighborhood poverty | American Community Survey | Percent | 2007-11 to 2019-23 | 5-year overlapping windows, not single years |
+| Short name | File in `data/raw/` | Indicator | Source | Measure used | UHF42 years | Notes |
+|---|---|---|---|---|---|---|
+| pm25 | NYC EH Data Portal - Fine particles (PM 2.5) (filtered).csv | Fine particles (PM 2.5) | NYC Community Air Survey | Annual mean (mcg/m3) | 2015-2025 | |
+| asthma_ed_5to17 | NYC EH Data Portal - Asthma emergency department visits (age 5 to 17) (filtered).csv | Asthma ED visits (age 5 to 17) | SPARCS hospital discharge data | Estimated annual rate per 10,000 | 2005-2023 | 3 values flagged with "*" |
+| asthma_ed_adults | NYC EH Data Portal - Asthma emergency department visits (adults) (filtered).csv | Asthma ED visits (adults) | SPARCS hospital discharge data | Age-adjusted rate per 10,000 | 2005-2023 | 2015 missing in this file |
+| poverty | NYC EH Data Portal - Neighborhood poverty (filtered).csv | Neighborhood poverty | American Community Survey | Percent | 2007-11 to 2019-23 | 5-year overlapping windows, not single years |
 
 ## Not used
 - "Asthma ED visits due to PM2.5" and "due to Ozone": modeled estimates, circular with PM2.5.
