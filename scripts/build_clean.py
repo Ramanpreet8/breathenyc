@@ -4,9 +4,9 @@ from pathlib import Path
 import pandas as pd
 
 if __package__:
-    from .load_data import DATASETS, Dataset, load_one, uhf42
+    from .load_data import load_one, uhf42
 else:
-    from load_data import DATASETS, Dataset, load_one, uhf42
+    from load_data import load_one, uhf42
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -14,105 +14,97 @@ START_YEAR = 2015
 END_YEAR = 2023
 
 
-def _prepare_dataset(dataset: Dataset) -> pd.DataFrame:
-    rows = uhf42(load_one(dataset.name))
-    if dataset.window_years:
-        rows["poverty_window"] = rows["TimePeriod"]
-        rows["year"] = 2000 + rows["TimePeriod"].str[-2:].astype(int)
-    else:
-        rows["year"] = rows["TimePeriod"].astype(int)
-    rows = rows.loc[rows["year"].between(START_YEAR, END_YEAR)].copy()
+def _prep_pm25() -> pd.DataFrame:
+    df = uhf42(load_one("pm25"))
+    df["year"] = df["TimePeriod"].astype(int)
+    df = df.loc[df["year"].between(START_YEAR, END_YEAR)].copy()
+    df = df.rename(
+        columns={
+            "Geography": "neighborhood",
+            "Annual mean mcg/m3": "pm25_annual",
+        }
+    )
+    return df[["GeoID", "neighborhood", "Borough", "year", "pm25_annual"]]
 
-    renames = dict(dataset.columns)
-    for raw_column, clean_column in dataset.columns.items():
-        flag_column = f"{raw_column}_flagged"
-        if flag_column in rows.columns:
-            renames[flag_column] = f"{clean_column}_flagged"
-    if dataset.name == "pm25":
-        renames["Geography"] = "neighborhood"
-    rows = rows.rename(columns=renames)
 
-    if dataset.name == "pm25":
-        value_columns = [
+def _prep_child_asthma() -> pd.DataFrame:
+    df = uhf42(load_one("asthma_ed_5to17"))
+    df["year"] = df["TimePeriod"].astype(int)
+    df = df.loc[df["year"].between(START_YEAR, END_YEAR)].copy()
+    # In pediatric asthma, both rate and count are flagged on the exact same 3 low-count rows
+    assert df["Number_flagged"].equals(
+        df["Estimated annual rate per 10,000_flagged"]
+    )
+    df = df.rename(
+        columns={
+            "Estimated annual rate per 10,000": "asthma_child_rate",
+            "Estimated annual rate per 10,000_flagged": "asthma_child_rate_flagged",
+            "Number": "asthma_child_n",
+        }
+    )
+    return df[
+        [
             "GeoID",
-            "neighborhood",
-            "Borough",
             "year",
-            *dataset.columns.values(),
+            "asthma_child_rate",
+            "asthma_child_n",
+            "asthma_child_rate_flagged",
         ]
-    else:
-        value_columns = ["GeoID", "year"]
-        if dataset.window_years:
-            value_columns.append("poverty_window")
-        value_columns.extend(dataset.columns.values())
-    flag_columns = [column for column in rows if column.endswith("_flagged")]
-    return rows[value_columns + flag_columns]
+    ]
 
 
-def _drop_unneeded_flags(
-    dataset: Dataset,
-    frame: pd.DataFrame,
-    child_name: str,
-    child_rate_flag: str,
-    child_count_flag: str,
-) -> pd.DataFrame:
-    flag_columns = [column for column in frame if column.endswith("_flagged")]
-    for column in flag_columns:
-        if dataset.name == child_name and column == child_rate_flag:
-            continue
-        if dataset.name == child_name and column == child_count_flag:
-            # The portal marks both fields for the same low-count visits.
-            assert frame[column].equals(frame[child_rate_flag])
-        else:
-            assert not frame[column].any(), (
-                f"Unexpected flagged values in {dataset.name}.{column}"
-            )
-    drop_columns = [column for column in flag_columns if column != child_rate_flag]
-    return frame.drop(columns=drop_columns)
+def _prep_adult_asthma() -> pd.DataFrame:
+    df = uhf42(load_one("asthma_ed_adults"))
+    df["year"] = df["TimePeriod"].astype(int)
+    df = df.loc[df["year"].between(START_YEAR, END_YEAR)].copy()
+    df = df.rename(
+        columns={
+            "Age-adjusted rate per 10,000": "asthma_adult_rate_adj",
+            "Estimated annual rate per 10,000": "asthma_adult_rate_raw",
+            "Number": "asthma_adult_n",
+        }
+    )
+    return df[
+        [
+            "GeoID",
+            "year",
+            "asthma_adult_rate_adj",
+            "asthma_adult_rate_raw",
+            "asthma_adult_n",
+        ]
+    ]
+
+
+def _prep_poverty() -> pd.DataFrame:
+    df = uhf42(load_one("poverty"))
+    df["poverty_window"] = df["TimePeriod"]
+    # Map 5-year rolling period to end year (e.g. '2019-23' -> 2023)
+    end_years = df["TimePeriod"].str.split("-").str[1]
+    df["year"] = ("20" + end_years).astype(int)
+    df = df.loc[df["year"].between(START_YEAR, END_YEAR)].copy()
+    df = df.rename(columns={"Percent": "poverty_pct"})
+    return df[["GeoID", "year", "poverty_window", "poverty_pct"]]
 
 
 def build_panel() -> pd.DataFrame:
-    datasets = {dataset.name: dataset for dataset in DATASETS}
-    frames = {
-        dataset.name: _prepare_dataset(dataset)
-        for dataset in DATASETS
-    }
+    pm25 = _prep_pm25()
+    child = _prep_child_asthma()
+    adult = _prep_adult_asthma()
+    poverty = _prep_poverty()
 
-    child_dataset = datasets["asthma_ed_5to17"]
-    child_rate_flag = (
-        child_dataset.columns["Estimated annual rate per 10,000"] + "_flagged"
+    panel = (
+        pm25.merge(child, on=["GeoID", "year"], how="left", validate="one_to_one")
+        .merge(adult, on=["GeoID", "year"], how="left", validate="one_to_one")
+        .merge(poverty, on=["GeoID", "year"], how="left", validate="one_to_one")
     )
-    child_count_flag = child_dataset.columns["Number"] + "_flagged"
-    for dataset in DATASETS:
-        frames[dataset.name] = _drop_unneeded_flags(
-            dataset,
-            frames[dataset.name],
-            child_dataset.name,
-            child_rate_flag,
-            child_count_flag,
-        )
 
-    panel = frames["pm25"]
-    for dataset in DATASETS:
-        if dataset.name == "pm25":
-            continue
-        panel = panel.merge(
-            frames[dataset.name],
-            on=["GeoID", "year"],
-            how="left",
-            validate="one_to_one",
-        )
-        print(f"Rows after {dataset.name} merge: {len(panel)}")
-
-    poverty_dataset = datasets["poverty"]
-    poverty_column = next(iter(poverty_dataset.columns.values()))
-    poverty = frames[poverty_dataset.name]
+    # Pre-pandemic 2019-23 baseline poverty for Robustness A
     baseline = poverty.loc[
-        poverty["poverty_window"].eq("2019-23"), ["GeoID", poverty_column]
+        poverty["poverty_window"].eq("2019-23"), ["GeoID", "poverty_pct"]
     ]
     assert baseline["GeoID"].nunique() == 42
     assert not baseline["GeoID"].duplicated().any()
-    baseline_values = baseline.set_index("GeoID")[poverty_column]
+    baseline_values = baseline.set_index("GeoID")["poverty_pct"]
     panel["poverty_pct_2019_23"] = panel["GeoID"].map(baseline_values)
 
     panel = panel.sort_values(["GeoID", "year"]).reset_index(drop=True)
@@ -122,24 +114,29 @@ def build_panel() -> pd.DataFrame:
     assert panel["year"].nunique() == 9
     assert not panel.duplicated(["GeoID", "year"]).any()
 
-    adult_dataset = datasets["asthma_ed_adults"]
-    adult_columns = list(adult_dataset.columns.values())
-    adult_adjusted = adult_dataset.columns["Age-adjusted rate per 10,000"]
+    adult_columns = [
+        "asthma_adult_rate_adj",
+        "asthma_adult_rate_raw",
+        "asthma_adult_n",
+    ]
     adult_2015 = panel["year"].eq(2015)
-    assert panel[adult_adjusted].isna().sum() == 42
-    assert panel.loc[panel[adult_adjusted].isna(), "year"].eq(2015).all()
+    assert panel["asthma_adult_rate_adj"].isna().sum() == 42
+    assert panel.loc[adult_2015, "asthma_adult_rate_adj"].isna().all()
     for column in adult_columns:
-        assert panel[column].isna().equals(adult_2015), (
-            f"{column} should be missing only for the 2015 UHF42 rows"
+        assert panel.loc[adult_2015, column].isna().all(), (
+            f"{column} should be missing for 2015"
+        )
+        assert panel.loc[~adult_2015, column].notna().all(), (
+            f"{column} should be non-missing outside 2015"
         )
 
     other_columns = [
         column for column in panel.columns if column not in adult_columns
     ]
-    assert not panel[other_columns].isna().any().any(), (
+    assert panel[other_columns].isna().sum().sum() == 0, (
         "Unexpected missing values outside the 2015 adult asthma fields"
     )
-    assert panel[child_rate_flag].eq(True).sum() == 3
+    assert panel["asthma_child_rate_flagged"].eq(True).sum() == 3
 
     output_path = ROOT / "data" / "clean" / "uhf42_panel.csv"
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -150,10 +147,13 @@ def build_panel() -> pd.DataFrame:
         f"and {panel['year'].nunique()} years to {output_path.relative_to(ROOT)}"
     )
     print(f"Year range: {panel['year'].min()}-{panel['year'].max()}")
-    print(f"Child asthma low-count rows: {panel[child_rate_flag].eq(True).sum()}")
+    print(
+        "Child asthma low-count rows: "
+        f"{panel['asthma_child_rate_flagged'].eq(True).sum()}"
+    )
     print(
         "Adult asthma 2015 rows left missing: "
-        f"{panel.loc[adult_2015, adult_adjusted].isna().sum()}"
+        f"{panel.loc[adult_2015, 'asthma_adult_rate_adj'].isna().sum()}"
     )
     return panel
 

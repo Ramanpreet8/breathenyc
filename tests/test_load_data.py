@@ -39,10 +39,11 @@ def test_every_dataset_loads_with_42_uhf42_areas():
 
 
 def test_child_asthma_has_expected_flagged_rows():
-    dataset = get_dataset("asthma_ed_5to17")
-    child = uhf42(load_one(dataset.name))
-    flag_cols = [f"{column}_flagged" for column in dataset.columns]
-    flagged = child.loc[child[flag_cols].any(axis=1), ["GeoID", "TimePeriod"]]
+    child = uhf42(load_one("asthma_ed_5to17"))
+    flagged = child.loc[
+        child["Estimated annual rate per 10,000_flagged"],
+        ["GeoID", "TimePeriod"],
+    ]
 
     observed = set(zip(flagged["GeoID"].astype(int), flagged["TimePeriod"]))
     assert len(flagged) == 3

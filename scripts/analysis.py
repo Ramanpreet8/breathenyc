@@ -16,7 +16,7 @@ def fit_model(
 ) -> pd.DataFrame:
     """Estimate the PM2.5 coefficient and return its clustered inference."""
     controls = list(controls)
-    required = list(dict.fromkeys([outcome, "pm25_annual", "year", "GeoID", *controls]))
+    required = [outcome, "pm25_annual", "year", "GeoID"] + controls
     missing = [column for column in required if column not in panel.columns]
     if missing:
         raise ValueError(f"Missing model columns: {', '.join(missing)}")
@@ -57,9 +57,22 @@ def _named_model(
     controls: Sequence[str],
 ) -> pd.DataFrame:
     result = fit_model(panel, outcome, controls)
-    result.insert(0, "specification", specification)
-    result.insert(2, "controls", ", ".join(controls) if controls else "none")
-    return result
+    result["specification"] = specification
+    result["controls"] = ", ".join(controls) if controls else "none"
+    ordered_columns = [
+        "specification",
+        "outcome",
+        "controls",
+        "term",
+        "coefficient",
+        "standard_error",
+        "ci_lower_95",
+        "ci_upper_95",
+        "p_value",
+        "n_rows",
+        "n_clusters",
+    ]
+    return result[ordered_columns]
 
 
 def run_sensitivity_models(panel: pd.DataFrame) -> pd.DataFrame:
