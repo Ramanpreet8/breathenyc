@@ -4,3 +4,4 @@ jupyter
 statsmodels
 scipy
 matplotlib
+pytest
