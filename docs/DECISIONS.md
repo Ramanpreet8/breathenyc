@@ -39,3 +39,10 @@ The adult asthma ED visit file reports two rates per 10,000 residents: a raw est
 Two limitations should be noted. First, the adult and child outcomes are different kinds of rates (age-adjusted versus raw), so their values should not be compared directly in size, only in how they relate to PM2.5 and poverty. Second, age adjustment depends on the standard population the portal chose, which this project does not control.
 
 As a robustness check, we plan to repeat the adult analysis using the raw estimated annual rate to assess whether the findings are sensitive to this choice.
+
+## Update 2026-11-26
+
+### Time trends and the 2020-2021 pandemic years
+Citywide PM2.5 and asthma ED rates both decline over 2015-2023, and ED visits drop sharply in 2020-2021 (COVID-19). A pooled correlation across all years would mostly reflect this shared time trend rather than differences between neighborhoods. Decision: models for RQ1 and RQ2 include year fixed effects (one indicator per year), so the PM2.5 association is estimated from differences between neighborhoods within the same year. Standard errors will be clustered by neighborhood, because each neighborhood appears up to 9 times. As a robustness check, the analysis will be repeated excluding 2020 and 2021.
+
+This decision is recorded before any association between PM2.5 and asthma has been examined.
