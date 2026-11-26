@@ -1,4 +1,4 @@
-GeoID,neighborhood,Borough,year,pm25_annual,asthma_child_rate,asthma_child_n,asthma_child_flagged,asthma_adult_rate_adj,asthma_adult_rate_raw,asthma_adult_n,poverty_window,poverty_pct,poverty_pct_2019_23
+GeoID,neighborhood,Borough,year,pm25_annual,asthma_child_rate,asthma_child_n,asthma_child_rate_flagged,asthma_adult_rate_adj,asthma_adult_rate_raw,asthma_adult_n,poverty_window,poverty_pct,poverty_pct_2019_23
 101,Kingsbridge - Riverdale,Bronx,2015,9.2,195.6,235,False,,,,2011-15,15.9,16.5
 101,Kingsbridge - Riverdale,Bronx,2016,7.5,177.3,214,False,78.3,75.0,559.0,2012-16,16.3,16.5
 101,Kingsbridge - Riverdale,Bronx,2017,7.4,132.6,165,False,52.1,49.6,394.0,2013-17,15.2,16.5

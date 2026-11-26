@@ -17,3 +17,8 @@ What I did, what broke, what I learned.
 ## Day 4 (2026-11-26)
 - Fixed audit notes and built `data/clean/uhf42_panel.csv` with assertions.
 - Recorded the year-fixed-effects decision.
+
+## Day 5 (2026-11-26)
+- Refactored the loader to a `Dataset` dataclass with per-measure flags and added tests.
+- Fixed `build_clean.py` after the flag rename.
+- Learned: run the full pipeline after any refactor.
